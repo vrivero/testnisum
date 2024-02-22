@@ -26,17 +26,21 @@ public class UserResponse {
     private Boolean isactive;
     private List<PhoneResponse> phones;
 
-    public static UserResponse toResponse(User user){
-        return UserResponse.builder()
+    public static UserResponse toResponse(User user, boolean allData){
+        UserResponseBuilder builder =  UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .created(user.getCreated())
                 .updated(user.getUpdated())
                 .last_login(user.getLastlogin())
-                .isactive(user.getIsactive())
-                .token(user.getToken())
-                .phones(getPhoneList(user.getPhones())).build();
+                .isactive(user.getIsactive());
+        if (allData){
+            builder.token(user.getToken())
+                .phones(getPhoneList(user.getPhones()));
+        }
+
+        return builder.build();
     }
 
     private static List<PhoneResponse> getPhoneList(List<Phone> phoneList){

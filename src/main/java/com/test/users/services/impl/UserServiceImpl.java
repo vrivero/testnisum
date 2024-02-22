@@ -13,13 +13,15 @@ import com.test.users.repositories.UserRepository;
 import com.test.users.services.UserService;
 import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service("UserService")
 public class UserServiceImpl implements UserService {
@@ -40,6 +42,29 @@ public class UserServiceImpl implements UserService {
     private JwtTokenUtil tokenUtil;
 
     @Override
+    public Map<String, Object> listAllUsers(Integer page, Integer size, String sortBy, String sortDirection, String filter){
+
+        Pageable paging = PageRequest.of(page, size,
+                sortDirection.equals("asc") ? Sort.by(sortBy) : Sort.by(sortBy).descending());
+
+        if (filter == null) filter = "";
+
+        Page<User> userList;
+        userList = userRepo.findFiltering(filter.toUpperCase(), paging);
+
+        Map<String, Object> response = new HashMap<>();
+        if (userList.hasContent()){
+            response.put("users", toResponseList(userList.getContent()));
+            response.put("page",userList.getNumber());
+            response.put("size", userList.getSize());
+            response.put("totalElem", userList.getTotalElements());
+            response.put("totalPage", userList.getTotalPages());
+        }
+
+        return response;
+    }
+
+    @Override
     public UserResponse createUser(UserRequest request) {
 
         if (userRepo.existsByEmail(request.getEmail())) throw new ValidationException("Correo ya se encuentra registrado");
@@ -55,7 +80,7 @@ public class UserServiceImpl implements UserService {
 
         userRepo.save(newUser);
 
-        return UserResponse.toResponse(newUser);
+        return UserResponse.toResponse(newUser, true);
     }
 
     @Override
@@ -64,6 +89,9 @@ public class UserServiceImpl implements UserService {
         User currUser = userRepo.findById(id)
                 .orElseThrow(() -> (new NotFoundException("Usuario no encontrado")));
 
+        if (!currUser.getEmail().equals(request.getEmail()) && userRepo.existsByEmail(request.getEmail()))
+            throw new ValidationException("Correo ya se encuentra registrado");
+
         currUser.setEmail(request.getEmail());
         currUser.setPassword(passwordEncoder.encode(request.getPassword()));
         currUser.setName(request.getName());
@@ -71,7 +99,7 @@ public class UserServiceImpl implements UserService {
 
         userRepo.save(currUser);
 
-        return UserResponse.toResponse(currUser);
+        return UserResponse.toResponse(currUser, true);
     }
 
     @Override
@@ -79,6 +107,9 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepo.findByEmail(loginUser.getEmail())
                 .orElseThrow(() -> (new NotFoundException("Credenciales incorrectas")));
+
+        if (!user.getIsactive())
+            throw new ValidationException("Usuario se encuentra desactivado");
 
         if (!bCryptPasswordEncoder.matches(loginUser.getPassword(), user.getPassword()))
             throw new ValidationException("Credenciales incorrectas");
@@ -88,7 +119,7 @@ public class UserServiceImpl implements UserService {
 
         userRepo.save(user);
 
-        return UserResponse.toResponse(user);
+        return UserResponse.toResponse(user, false);
     }
 
     private List<Phone> preparePhoneData(List<PhoneRequest> phoneRequests, User user){
@@ -102,6 +133,14 @@ public class UserServiceImpl implements UserService {
                     .build());
         }
         return phoneList;
+    }
+
+    private List<UserResponse> toResponseList(List<User> userList){
+        List<UserResponse> responseList = new ArrayList<>();
+        for (User user: userList) {
+            responseList.add(UserResponse.toResponse(user,false));
+        }
+        return responseList;
     }
 
 }

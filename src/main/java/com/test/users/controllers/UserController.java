@@ -21,6 +21,31 @@ public class UserController {
     @Autowired
     private UserService service;
 
+    /**
+     * List all users
+     * @param page
+     * @param size
+     * @param sortBy
+     * @param sortDirection
+     * @param filter
+     * @return
+     */
+    @GetMapping
+    public ResponseEntity<MessageResponse> listAll(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection,
+            @RequestParam(required = false) String filter
+    ){
+        try {
+            return ResponseEntity.ok().body(new SuccessResponse("success",
+                    service.listAllUsers(page, size, sortBy, sortDirection, filter)));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Ocurrió un error: " + e.getMessage()));
+        }
+    }
 
     /**
      * Create new user
@@ -44,6 +69,7 @@ public class UserController {
 
     /**
      * Update user
+     * @param id path variable user id
      * @param request data to update existing user
      * @return
      */

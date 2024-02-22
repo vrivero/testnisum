@@ -5,7 +5,11 @@ import com.test.users.dtos.request.LoginRequest;
 import com.test.users.dtos.request.UserRequest;
 import com.test.users.dtos.response.UserResponse;
 
+import java.util.Map;
+
 public interface UserService {
+
+    Map<String, Object> listAllUsers(Integer page, Integer size, String sortBy, String sortDirection, String filter);
 
     UserResponse createUser(UserRequest newUser);
 
