@@ -1,11 +1,13 @@
 package com.test.users.services.impl;
 
 import com.test.users.configs.security.JwtTokenUtil;
+import com.test.users.exceptions.DuplicateException;
 import com.test.users.exceptions.NotFoundException;
 import com.test.users.dtos.request.LoginRequest;
 import com.test.users.dtos.request.PhoneRequest;
 import com.test.users.dtos.request.UserRequest;
 import com.test.users.dtos.response.UserResponse;
+import com.test.users.exceptions.UserInactiveException;
 import com.test.users.models.Phone;
 import com.test.users.models.User;
 import com.test.users.repositories.PhoneRepository;
@@ -65,9 +67,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse createUser(UserRequest request) {
+    public UserResponse createUser(UserRequest request) throws DuplicateException {
 
-        if (userRepo.existsByEmail(request.getEmail())) throw new ValidationException("Correo ya se encuentra registrado");
+        if (userRepo.existsByEmail(request.getEmail())) throw new DuplicateException("Correo ya se encuentra registrado");
 
         User newUser = User.builder()
                 .name(request.getName())
@@ -84,13 +86,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateUser(String id, UserRequest request) throws NotFoundException {
+    public UserResponse updateUser(String id, UserRequest request) throws NotFoundException, DuplicateException {
 
         User currUser = userRepo.findById(id)
                 .orElseThrow(() -> (new NotFoundException("Usuario no encontrado")));
 
         if (!currUser.getEmail().equals(request.getEmail()) && userRepo.existsByEmail(request.getEmail()))
-            throw new ValidationException("Correo ya se encuentra registrado");
+            throw new DuplicateException("Correo ya se encuentra registrado");
 
         currUser.setEmail(request.getEmail());
         currUser.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -103,13 +105,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse loginUser(LoginRequest loginUser) throws NotFoundException {
+    public UserResponse loginUser(LoginRequest loginUser) throws NotFoundException, UserInactiveException {
 
         User user = userRepo.findByEmail(loginUser.getEmail())
                 .orElseThrow(() -> (new NotFoundException("Credenciales incorrectas")));
 
         if (!user.getIsactive())
-            throw new ValidationException("Usuario se encuentra desactivado");
+            throw new UserInactiveException("Usuario se encuentra desactivado");
 
         if (!bCryptPasswordEncoder.matches(loginUser.getPassword(), user.getPassword()))
             throw new ValidationException("Credenciales incorrectas");

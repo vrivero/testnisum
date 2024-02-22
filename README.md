@@ -35,3 +35,4 @@ java -jar -Dpassword.regex='^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za
 
 Puede descargar la colección de postman desde [acá](https://api.postman.com/collections/24324434-4f95ebed-ad09-41ac-8b4c-ab9994b72c6f?access_key=PMAT-01HQ8MTC3JRNQMBHRP8JPFMEVH)
 
+La documentación de Swagger se accede una vez corriendo el servicio en http://localhost:13531/api/v1/swagger-ui/index.html
