@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
 
         userRepo.save(user);
 
-        return UserResponse.toResponse(user, false);
+        return UserResponse.toResponse(user, true);
     }
 
     private List<Phone> preparePhoneData(List<PhoneRequest> phoneRequests, User user){

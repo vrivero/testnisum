@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ public interface UserApi {
     @Operation(
             summary = "Listado de Usuarios",
             description = "Retorna el listado de los usuarios almacenados en la BD")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "success", useReturnTypeSchema = true,
                     content = @Content(examples = @ExampleObject(
@@ -70,7 +72,10 @@ public interface UserApi {
                                     "        ]\n" +
                                     "    }\n" +
                                     "}"
-                    )))
+                    ))),
+            @ApiResponse(responseCode = "500", description = "Error interno",content = @Content(examples = @ExampleObject(
+                    value = "{\"message\": \"error: Ocurrio un error inesperado\"}"
+            )))
     })
     ResponseEntity<MessageResponse> listAll(
             @RequestParam(defaultValue = "0") Integer page,
@@ -118,6 +123,9 @@ public interface UserApi {
             ))),
             @ApiResponse(responseCode = "409", description = "Correo ya se encuentra registrado", content = @Content(examples = @ExampleObject(
                     value = "{\"message\": \"error: Correo ya se encuentra registrado\"}"
+            ))),
+            @ApiResponse(responseCode = "500", description = "Error interno",content = @Content(examples = @ExampleObject(
+                    value = "{\"message\": \"error: Ocurrio un error inesperado\"}"
             )))
     })
     ResponseEntity<MessageResponse> create(@RequestBody UserRequest request);
@@ -164,6 +172,9 @@ public interface UserApi {
             ))),
             @ApiResponse(responseCode = "409", description = "Correo ya se encuentra registrado", content = @Content(examples = @ExampleObject(
                     value = "{\"message\": \"error: Correo ya se encuentra registrado\"}"
+            ))),
+            @ApiResponse(responseCode = "500", description = "Error interno",content = @Content(examples = @ExampleObject(
+                    value = "{\"message\": \"error: Ocurrio un error inesperado\"}"
             )))
     })
     ResponseEntity<MessageResponse> update(@PathVariable String id, @Valid @RequestBody UserRequest request);
@@ -193,6 +204,12 @@ public interface UserApi {
             ))),
             @ApiResponse(responseCode = "401", description = "No autorizado",content = @Content(examples = @ExampleObject(
                     value = "{\"message\": \"error: Usuario se encuentra desactivado\"}"
+            ))),
+            @ApiResponse(responseCode = "404", description = "Usuario No encontrado",content = @Content(examples = @ExampleObject(
+                    value = "{\"message\": \"error: Usuario no encontrado\"}"
+            ))),
+            @ApiResponse(responseCode = "500", description = "Error interno",content = @Content(examples = @ExampleObject(
+                    value = "{\"message\": \"error: Ocurrio un error inesperado\"}"
             )))
     })
     ResponseEntity<MessageResponse> login(@RequestBody LoginRequest request);
